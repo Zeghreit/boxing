@@ -1,135 +1,368 @@
 {
  "clips": {
-  "idle": {
-   "frames": 66,
-   "duration": 2.2,
-   "impact": 0.8,
-   "reach": 0.336,
-   "hand": "LeftHand"
-  },
-  "jab": {
-   "frames": 52,
-   "duration": 1.733,
-   "impact": 0.467,
-   "reach": 0.828,
-   "hand": "LeftHand"
+  "block": {
+   "frames": 49,
+   "duration": 2.45,
+   "impact": 0.95,
+   "reach": 0.356,
+   "hand": "RightHand"
   },
   "cross": {
-   "frames": 26,
-   "duration": 0.867,
-   "impact": 0.367,
-   "reach": 0.739,
+   "frames": 35,
+   "duration": 1.75,
+   "impact": 1.1,
+   "reach": 0.562,
    "hand": "RightHand"
-  },
-  "hook": {
-   "frames": 60,
-   "duration": 2.0,
-   "impact": 0.433,
-   "reach": 0.578,
-   "hand": "LeftHand"
-  },
-  "upper": {
-   "frames": 66,
-   "duration": 2.2,
-   "impact": 0.7,
-   "reach": 0.529,
-   "hand": "LeftHand"
-  },
-  "block": {
-   "frames": 46,
-   "duration": 1.533,
-   "impact": 1.0,
-   "reach": 0.496,
-   "hand": "RightHand"
-  },
-  "slipR": {
-   "frames": 43,
-   "duration": 1.433,
-   "impact": 0.233,
-   "reach": 0.538,
-   "hand": "RightHand"
-  },
-  "slipL": {
-   "frames": 43,
-   "duration": 1.433,
-   "impact": 0.233,
-   "reach": 0.538,
-   "hand": "LeftHand"
   },
   "duck": {
-   "frames": 70,
-   "duration": 2.333,
-   "impact": 0.533,
-   "reach": 0.521,
+   "frames": 31,
+   "duration": 1.55,
+   "impact": 0.55,
+   "reach": 0.462,
    "hand": "LeftHand"
   },
+  "getup": {
+   "frames": 99,
+   "duration": 4.95,
+   "impact": 0.0,
+   "reach": 0.907,
+   "hand": "RightHand"
+  },
   "hit": {
-   "frames": 36,
-   "duration": 1.2,
-   "impact": 0.5,
-   "reach": 0.656,
+   "frames": 29,
+   "duration": 1.45,
+   "impact": 1.1,
+   "reach": 0.402,
    "hand": "RightHand"
   },
   "hitBig": {
-   "frames": 73,
-   "duration": 2.433,
-   "impact": 0.967,
-   "reach": 0.77,
+   "frames": 49,
+   "duration": 2.45,
+   "impact": 0.85,
+   "reach": 0.345,
+   "hand": "RightHand"
+  },
+  "hook": {
+   "frames": 35,
+   "duration": 1.75,
+   "impact": 1.4,
+   "reach": 0.455,
+   "hand": "LeftHand"
+  },
+  "idle": {
+   "frames": 79,
+   "duration": 3.95,
+   "impact": 0.55,
+   "reach": 0.194,
+   "hand": "RightHand"
+  },
+  "jab": {
+   "frames": 31,
+   "duration": 1.55,
+   "impact": 1.0,
+   "reach": 0.506,
    "hand": "LeftHand"
   },
   "ko": {
-   "frames": 168,
-   "duration": 5.6,
-   "impact": 1.867,
-   "reach": 0.762,
+   "frames": 79,
+   "duration": 3.95,
+   "impact": 1.15,
+   "reach": 0.93,
+   "hand": "LeftHand"
+  },
+  "slipL": {
+   "frames": 27,
+   "duration": 1.35,
+   "impact": 0.5,
+   "reach": 0.367,
    "hand": "RightHand"
   },
-  "getup": {
-   "frames": 228,
-   "duration": 7.6,
-   "impact": 0.167,
-   "reach": 1.019,
+  "slipR": {
+   "frames": 27,
+   "duration": 1.35,
+   "impact": 0.5,
+   "reach": 0.354,
    "hand": "RightHand"
   },
-  "win": {
-   "frames": 135,
-   "duration": 4.5,
-   "impact": 0.6,
-   "reach": 0.611,
+  "stepB": {
+   "frames": 29,
+   "duration": 1.45,
+   "impact": 0.45,
+   "reach": 0.346,
    "hand": "LeftHand"
   },
   "stepF": {
-   "frames": 30,
-   "duration": 1.0,
-   "impact": 0.767,
-   "reach": 0.434,
-   "hand": "LeftHand"
-  },
-  "stepB": {
-   "frames": 25,
-   "duration": 0.833,
-   "impact": 0.067,
-   "reach": 0.432,
-   "hand": "LeftHand"
+   "frames": 29,
+   "duration": 1.45,
+   "impact": 0.45,
+   "reach": 0.306,
+   "hand": "RightHand"
   },
   "stepL": {
-   "frames": 31,
-   "duration": 1.033,
+   "frames": 29,
+   "duration": 1.45,
    "impact": 0.8,
-   "reach": 0.341,
-   "hand": "LeftHand"
+   "reach": 0.343,
+   "hand": "RightHand"
   },
   "stepR": {
-   "frames": 37,
-   "duration": 1.233,
-   "impact": 1.033,
-   "reach": 0.416,
+   "frames": 29,
+   "duration": 1.45,
+   "impact": 0.5,
+   "reach": 0.276,
+   "hand": "RightHand"
+  },
+  "upper": {
+   "frames": 35,
+   "duration": 1.75,
+   "impact": 1.55,
+   "reach": 0.296,
    "hand": "LeftHand"
+  },
+  "win": {
+   "frames": 79,
+   "duration": 3.95,
+   "impact": 1.4,
+   "reach": 0.713,
+   "hand": "RightHand"
   }
  },
  "height": 1.8,
+ "fps": 20,
+ "source": "ARDY",
  "tris": 9230,
  "bones": 33,
  "scale": 110.64623753648769,
- "glb_kb": 2461
+ "retarget": {
+  "block": {
+   "bones": 18,
+   "frames": [
+    1,
+    50
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "LeftToeBase",
+    "RightShoulder",
+    "Spine1"
+   ]
+  },
+  "cross": {
+   "bones": 20,
+   "frames": [
+    1,
+    36
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "duck": {
+   "bones": 19,
+   "frames": [
+    1,
+    32
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "LeftToeBase",
+    "RightShoulder"
+   ]
+  },
+  "getup": {
+   "bones": 20,
+   "frames": [
+    1,
+    100
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "hit": {
+   "bones": 19,
+   "frames": [
+    1,
+    30
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder",
+    "Spine1"
+   ]
+  },
+  "hitBig": {
+   "bones": 20,
+   "frames": [
+    1,
+    50
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "hook": {
+   "bones": 20,
+   "frames": [
+    1,
+    36
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "idle": {
+   "bones": 16,
+   "frames": [
+    1,
+    80
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "LeftToeBase",
+    "RightShoulder",
+    "RightToeBase",
+    "Spine",
+    "Spine1"
+   ]
+  },
+  "jab": {
+   "bones": 20,
+   "frames": [
+    1,
+    32
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "ko": {
+   "bones": 20,
+   "frames": [
+    1,
+    80
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "slipL": {
+   "bones": 19,
+   "frames": [
+    1,
+    28
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "LeftToeBase",
+    "RightShoulder"
+   ]
+  },
+  "slipR": {
+   "bones": 19,
+   "frames": [
+    1,
+    28
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "LeftToeBase",
+    "RightShoulder"
+   ]
+  },
+  "stepB": {
+   "bones": 19,
+   "frames": [
+    1,
+    30
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder",
+    "Spine1"
+   ]
+  },
+  "stepF": {
+   "bones": 20,
+   "frames": [
+    1,
+    30
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "stepL": {
+   "bones": 20,
+   "frames": [
+    1,
+    30
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "stepR": {
+   "bones": 20,
+   "frames": [
+    1,
+    30
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder"
+   ]
+  },
+  "upper": {
+   "bones": 19,
+   "frames": [
+    1,
+    36
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder",
+    "RightToeBase"
+   ]
+  },
+  "win": {
+   "bones": 19,
+   "frames": [
+    1,
+    80
+   ],
+   "scale_k": 0.011,
+   "skipped_no_channel": [
+    "LeftShoulder",
+    "RightShoulder",
+    "RightToeBase"
+   ]
+  }
+ },
+ "glb_kb": 2214
 }

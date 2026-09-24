@@ -139,7 +139,7 @@ body.replay #rbadge{display:block;animation:blink 1.2s infinite}
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.3</span></div>
+  <div class="brand">Бокс <span>0.4</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -755,7 +755,9 @@ class Fighter {
       : /Right(Shoulder|Arm|ForeArm|Hand)/.test(n) ? 'armR'
       : /(Spine|Neck|Head)/.test(n) ? 'core' : 'legs';
     const ALL = ['legs', 'core', 'armL', 'armR'];
-    const MASK = {
+    // 0.4: клипы ARDY сгенерированы в одной стойке с поднятой защитой - маски больше не нужны,
+    // каждый клип ведёт всё тело (механизм оставлен: вернуть группу = вписать сюда)
+    const MASK = (this.meta && this.meta.source === 'ARDY') ? {} : {
       stepF: ['legs'], stepB: ['legs'], stepL: ['legs'], stepR: ['legs'],
       hit: ['legs', 'core'], hitBig: ['legs', 'core'], duck: ['legs', 'core'],
       jab: ['legs', 'core', 'armL'], hook: ['legs', 'core', 'armL'], upper: ['legs', 'core', 'armL'],
@@ -1033,7 +1035,7 @@ async function loadFighters() {
   const get = n => Promise.all([loader.loadAsync(`models/${n}.glb?v=${VER}`), fetch(`models/${n}.json?v=${VER}`).then(r => r.json())]);
   const [[pg, pm], [eg, em]] = await Promise.all([get('boxer_player'), get('boxer_enemy')]);
   player.attach(pg, pm, 1); enemy.attach(eg, em, 1.03);
-  GETUP_T = 4.4;
+  GETUP_T = pm && pm.source === 'ARDY' ? 3.4 : 4.4;   // ARDY встаёт за первую половину клипа
   // окно удара подстраивается под кадр попадания в клипе (замах читается, но не тянется)
   for (const [k, P] of Object.entries(PUNCH)) {
     const imp = (pm.clips[k] || {}).impact;
