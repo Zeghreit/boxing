@@ -107,7 +107,7 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.2d</span></div>
+  <div class="brand">Бокс <span>0.2e</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -521,20 +521,33 @@ class Fighter {
     this.body.visible = false; this.root.add(this.model);
     this.mixer = new THREE.AnimationMixer(this.model);
     this.acts = {};
-    for (const c of gltf.animations) this.acts[c.name] = this.mixer.clipAction(c);
-    // Слои: клипы шагов Mixamo разваливают стойку (перчатки уходят от лица на ~0.5 м).
-    // Шаги оставляем только для ног и таза, корпус/руки/голову берём из боксёрского idle.
-    const UPPER = /(Spine|Neck|Head|Shoulder|Arm|Hand)/;
-    const clip = n => gltf.animations.find(c => c.name === n);
+    /* Маски по группам костей. Клипы Mixamo собраны из разных наборов, и многие
+       начинаются не из боксёрской стойки (hit - руки у пояса, шаги - перчатки в 0.5 м
+       от лица, в кроссе левая уходит из защиты). Каждый клип ведёт только свои группы,
+       остальное добирает слой idle-стойки ровно на недостающий вес. */
     const bone = t => t.name.split('.')[0];
-    const idleC = clip('idle');
-    if (idleC) {
-      const up = new THREE.AnimationClip('idleUpper', idleC.duration, idleC.tracks.filter(t => UPPER.test(bone(t))));
-      this.upper = this.mixer.clipAction(up); this.upper.play(); this.upper.setEffectiveWeight(0); this.upperW = 0;
+    const group = n => /Left(Shoulder|Arm|ForeArm|Hand)/.test(n) ? 'armL'
+      : /Right(Shoulder|Arm|ForeArm|Hand)/.test(n) ? 'armR'
+      : /(Spine|Neck|Head)/.test(n) ? 'core' : 'legs';
+    const ALL = ['legs', 'core', 'armL', 'armR'];
+    const MASK = {
+      stepF: ['legs'], stepB: ['legs'], stepL: ['legs'], stepR: ['legs'],
+      hit: ['legs', 'core'], hitBig: ['legs', 'core'], duck: ['legs', 'core'],
+      jab: ['legs', 'core', 'armL'], hook: ['legs', 'core', 'armL'], upper: ['legs', 'core', 'armL'],
+      cross: ['legs', 'core', 'armR'],
+    };
+    this.groups = {};
+    for (const c of gltf.animations) {
+      const m = MASK[c.name] || ALL;
+      const clip = m === ALL ? c : new THREE.AnimationClip(c.name + ':' + m.join('+'), c.duration, c.tracks.filter(t => m.includes(group(bone(t)))));
+      this.acts[c.name] = this.mixer.clipAction(clip);
+      this.groups[c.name] = m;
     }
-    for (const k of ['stepF', 'stepB', 'stepL', 'stepR']) {
-      const c = clip(k);
-      if (c) this.acts[k] = this.mixer.clipAction(new THREE.AnimationClip(k + 'Legs', c.duration, c.tracks.filter(t => !UPPER.test(bone(t)))));
+    const idleC = gltf.animations.find(c => c.name === 'idle');
+    this.guard = {};
+    if (idleC) for (const g of ALL) {
+      const a = this.mixer.clipAction(new THREE.AnimationClip('guard:' + g, idleC.duration, idleC.tracks.filter(t => group(bone(t)) === g)));
+      a.play(); a.setEffectiveWeight(0); this.guard[g] = a;
     }
     this.cur = null; this.animKey = ''; this.seq = 0;
   }
@@ -578,14 +591,18 @@ class Fighter {
     }
     if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
     if (s === 'block' && this.cur && this.cur.time > this.dur('block') * .38) this.cur.paused = true;
-    if (this.upper) {
-      // верх из idle добирает ровно то, чего не хватает полным клипам (иначе руки
-      // на переходах проваливаются в позу рига)
-      let full = 0;
-      for (const [k, a] of Object.entries(this.acts)) if (!/^step/.test(k) && a.isRunning()) full += a.getEffectiveWeight();
-      this.upper.setEffectiveWeight(clamp(1 - full, 0, 1));
-    }
     this.mixer.update(dt);
+    // Слой стойки по группам: 1 - сумма весов клипов, которые ведут эту группу
+    // (иначе на переходах кости проваливаются в позу рига). Считаем ПОСЛЕ шага микшера:
+    // до него только что запущенный клип числится с весом 1, хотя его fade-in начинается с 0,
+    // и на один кадр руки падали в позу рига. Затем update(0) - пересобрать позу с новыми весами.
+    for (const [g, ga] of Object.entries(this.guard)) {
+      let w = 0;
+      // isScheduled, не isRunning: замороженный на последнем кадре клип (ko, блок) не «бежит», но держит позу
+      for (const [k, a] of Object.entries(this.acts)) if (a.isScheduled() && this.groups[k].includes(g)) w += a.getEffectiveWeight();
+      ga.setEffectiveWeight(clamp(1 - w, 0, 1));
+    }
+    this.mixer.update(0);
     // процедурный уклон: наклон позвоночника вбок + сдвиг таза, стойка не меняется
     const t = this.t, env = t < .3 ? smooth(t / .09) : 1 - smooth((t - .3) / .2);
     const want = s === 'dodge' && this.dd !== 'D' ? (this.dd === 'L' ? 1 : -1) * env : 0;
