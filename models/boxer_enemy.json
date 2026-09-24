@@ -10,126 +10,126 @@
   "jab": {
    "frames": 52,
    "duration": 1.733,
-   "impact": 0.5,
-   "reach": 0.533,
+   "impact": 0.433,
+   "reach": 0.871,
    "hand": "LeftHand"
   },
   "cross": {
    "frames": 26,
    "duration": 0.867,
-   "impact": 0.3,
-   "reach": 0.569,
+   "impact": 0.367,
+   "reach": 0.783,
    "hand": "RightHand"
   },
   "hook": {
    "frames": 60,
    "duration": 2.0,
-   "impact": 0.733,
-   "reach": 0.449,
-   "hand": "RightHand"
+   "impact": 0.433,
+   "reach": 0.636,
+   "hand": "LeftHand"
   },
   "upper": {
    "frames": 66,
    "duration": 2.2,
-   "impact": 0.767,
-   "reach": 0.55,
+   "impact": 0.667,
+   "reach": 0.567,
    "hand": "LeftHand"
   },
   "block": {
    "frames": 46,
    "duration": 1.533,
-   "impact": 0.6,
-   "reach": 0.65,
+   "impact": 0.967,
+   "reach": 0.519,
    "hand": "RightHand"
   },
   "slipR": {
    "frames": 43,
    "duration": 1.433,
-   "impact": 0.567,
-   "reach": 0.438,
+   "impact": 0.233,
+   "reach": 0.589,
    "hand": "RightHand"
   },
   "slipL": {
    "frames": 43,
    "duration": 1.433,
-   "impact": 0.567,
-   "reach": 0.428,
+   "impact": 0.233,
+   "reach": 0.591,
    "hand": "LeftHand"
   },
   "duck": {
    "frames": 70,
    "duration": 2.333,
-   "impact": 1.467,
-   "reach": 0.563,
-   "hand": "RightHand"
+   "impact": 0.533,
+   "reach": 0.54,
+   "hand": "LeftHand"
   },
   "hit": {
    "frames": 36,
    "duration": 1.2,
-   "impact": 0.5,
-   "reach": 0.581,
+   "impact": 0.467,
+   "reach": 0.69,
    "hand": "RightHand"
   },
   "hitBig": {
    "frames": 73,
    "duration": 2.433,
-   "impact": 0.9,
-   "reach": 0.639,
+   "impact": 0.967,
+   "reach": 0.802,
    "hand": "LeftHand"
   },
   "ko": {
    "frames": 168,
    "duration": 5.6,
-   "impact": 1.033,
-   "reach": 0.578,
-   "hand": "LeftHand"
+   "impact": 1.833,
+   "reach": 0.814,
+   "hand": "RightHand"
   },
   "getup": {
    "frames": 228,
    "duration": 7.6,
-   "impact": 0.4,
-   "reach": 0.822,
+   "impact": 0.167,
+   "reach": 1.036,
    "hand": "RightHand"
   },
   "win": {
    "frames": 135,
    "duration": 4.5,
-   "impact": 2.2,
-   "reach": 0.709,
+   "impact": 0.6,
+   "reach": 0.655,
    "hand": "LeftHand"
   },
   "stepF": {
    "frames": 30,
    "duration": 1.0,
-   "impact": 0.933,
-   "reach": 0.473,
+   "impact": 0.767,
+   "reach": 0.468,
    "hand": "LeftHand"
   },
   "stepB": {
    "frames": 25,
    "duration": 0.833,
-   "impact": 0.033,
-   "reach": 0.471,
+   "impact": 0.067,
+   "reach": 0.461,
    "hand": "LeftHand"
   },
   "stepL": {
    "frames": 31,
    "duration": 1.033,
-   "impact": 0.267,
-   "reach": 0.465,
-   "hand": "RightHand"
+   "impact": 0.8,
+   "reach": 0.357,
+   "hand": "LeftHand"
   },
   "stepR": {
    "frames": 31,
    "duration": 1.033,
-   "impact": 0.267,
-   "reach": 0.455,
-   "hand": "LeftHand"
+   "impact": 0.8,
+   "reach": 0.354,
+   "hand": "RightHand"
   }
  },
  "height": 1.8,
  "tris": 8994,
  "bones": 33,
  "scale": 112.39007009588276,
- "glb_kb": 2505
+ "glb_kb": 2499
 }
