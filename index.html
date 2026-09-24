@@ -107,7 +107,7 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.2e</span></div>
+  <div class="brand">Бокс <span>0.2f</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -408,6 +408,16 @@ function tiltBone(bone, axisW, ang) {
   bone.quaternion.premultiply(Pi.multiply(_tq2).multiply(P));
   bone.updateMatrixWorld(true);
 }
+// повернуть кость так, чтобы её дочерняя кость (child) оказалась на луче к target (мировые координаты)
+function aimBone(bone, child, target) {
+  const a = bone.getWorldPosition(V()), c = child.getWorldPosition(V());
+  const cur = c.sub(a).normalize(), want = target.clone().sub(a).normalize();
+  _tq2.setFromUnitVectors(cur, want);
+  bone.parent.getWorldQuaternion(_tq1);
+  const P = _tq1.clone(), Pi = _tq1.clone().invert();
+  bone.quaternion.premultiply(Pi.multiply(_tq2).multiply(P));
+  bone.updateMatrixWorld(true);
+}
 const bez = (a, b, c, t) => V().copy(a).multiplyScalar((1 - t) * (1 - t)).addScaledVector(b, 2 * t * (1 - t)).addScaledVector(c, t * t);
 
 /* ---------- боец ---------- */
@@ -518,6 +528,14 @@ class Fighter {
     });
     this.spine = [];
     this.model.traverse(o => { if (o.isBone && /Spine[12]?$/.test(o.name)) this.spine.push(o); });
+    const findB = re => { let r = null; this.model.traverse(o => { if (!r && o.isBone && re.test(o.name)) r = o; }); return r; };
+    this.arms = {};
+    for (const [k, side] of [['L', 'Left'], ['R', 'Right']]) {
+      const up = findB(new RegExp(side + 'Arm$')), fore = findB(new RegExp(side + 'ForeArm$')), hand = findB(new RegExp(side + 'Hand$'));
+      const tip = hand && (findB(new RegExp(side + 'HandMiddle1$')) || hand.children.find(c => c.isBone));
+      if (up && fore && hand) this.arms[k] = { up, fore, hand, tip };
+    }
+    if (!this.arms.L || !this.arms.R) this.arms = null;
     this.body.visible = false; this.root.add(this.model);
     this.mixer = new THREE.AnimationMixer(this.model);
     this.acts = {};
@@ -551,6 +569,29 @@ class Fighter {
     }
     this.cur = null; this.animKey = ''; this.seq = 0;
   }
+  /* Высокая защита: 2-костный IK на каждую руку. Цель кисти - перед лбом со своей стороны,
+     локоть вниз-вперёд-наружу, перчатка «смотрит» вверх. Смешивание с анимацией - slerp по w. */
+  guardIK(w) {
+    this.model.updateMatrixWorld(true);
+    const H = this.headBone.getWorldPosition(V());
+    const f = V(Math.sin(this.yaw), 0, Math.cos(this.yaw)), l = V(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
+    for (const [k, sgn] of [['L', 1], ['R', -1]]) {
+      const A = this.arms[k];
+      const S = A.up.getWorldPosition(V()), Ew = A.fore.getWorldPosition(V()), Hw = A.hand.getWorldPosition(V());
+      const a = S.distanceTo(Ew), b = Ew.distanceTo(Hw);
+      const T = H.clone().addScaledVector(f, .16).addScaledVector(l, sgn * .085).addScaledVector(UP, -.1);
+      const pole = V().addScaledVector(UP, -1).addScaledVector(f, .35).addScaledVector(l, sgn * .45);
+      const E = V(), Tc = V(); ik(S, T, a, b, pole, E, Tc);
+      const q0u = A.up.quaternion.clone(), q0f = A.fore.quaternion.clone(), q0h = A.hand.quaternion.clone();
+      aimBone(A.up, A.fore, E);
+      aimBone(A.fore, A.hand, Tc);
+      if (A.tip) aimBone(A.hand, A.tip, A.hand.getWorldPosition(V()).addScaledVector(UP, 1).addScaledVector(f, .25));
+      A.up.quaternion.copy(q0u.slerp(A.up.quaternion, w));
+      A.fore.quaternion.copy(q0f.slerp(A.fore.quaternion, w));
+      A.hand.quaternion.copy(q0h.slerp(A.hand.quaternion, w));
+      A.up.updateMatrixWorld(true);
+    }
+  }
   dur(name) { const a = this.acts[name]; return a ? a.getClip().duration : 1; }
   play(name, once, ts, fade) {
     const a = this.acts[name] || this.acts.idle; if (!a) return;
@@ -567,7 +608,11 @@ class Fighter {
       key = 'p' + this.pid; name = this.pn; fade = .05;
       const imp = (this.meta.clips[name] || {}).impact || .3;
       ts = clamp(imp / (P.startup * this.spd), .7, 2.6);
-    } else if (s === 'block') { key = 'b' + this.seq; name = 'block'; ts = 1.8; fade = .07; }
+    } else if (s === 'block') {
+      // клип «High Left Block» однобокий, с наклоном, руки перекрещивались - стоим в idle,
+      // обе перчатки ко лбу ставит IK ниже (guardIK)
+      key = 'lidle'; name = 'idle'; once = false; fade = .15;
+    }
     else if (s === 'dodge' && this.dd === 'D') {
       key = 'd' + this.seq; name = 'duck'; ts = this.dur('duck') / .6; fade = .05;
     } else if (s === 'dodge') {
@@ -590,7 +635,6 @@ class Fighter {
       if (this.cur && this.animKey === key) this.cur.timeScale = ts;
     }
     if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
-    if (s === 'block' && this.cur && this.cur.time > this.dur('block') * .38) this.cur.paused = true;
     this.mixer.update(dt);
     // Слой стойки по группам: 1 - сумма весов клипов, которые ведут эту группу
     // (иначе на переходах кости проваливаются в позу рига). Считаем ПОСЛЕ шага микшера:
@@ -603,6 +647,9 @@ class Fighter {
       ga.setEffectiveWeight(clamp(1 - w, 0, 1));
     }
     this.mixer.update(0);
+    // процедурный блок: плавный вход/выход, обе перчатки ко лбу
+    this.blockA = (this.blockA || 0) + ((s === 'block' ? 1 : 0) - (this.blockA || 0)) * (1 - Math.exp(-dt * 22));
+    if (this.blockA > .01 && this.arms) this.guardIK(this.blockA);
     // процедурный уклон: наклон позвоночника вбок + сдвиг таза, стойка не меняется
     const t = this.t, env = t < .3 ? smooth(t / .09) : 1 - smooth((t - .3) / .2);
     const want = s === 'dodge' && this.dd !== 'D' ? (this.dd === 'L' ? 1 : -1) * env : 0;
@@ -1110,7 +1157,7 @@ function frame(now) {
 }
 placeFighters();
 requestAnimationFrame(frame);
-window.__game = { game, player, enemy, PUNCH, input };
+window.__game = { game, player, enemy, PUNCH, input, camera };
 </script>
 </body>
 </html>
