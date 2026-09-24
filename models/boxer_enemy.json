@@ -3,127 +3,127 @@
   "block": {
    "frames": 49,
    "duration": 2.45,
-   "impact": 0.95,
-   "reach": 0.356,
-   "hand": "RightHand"
+   "impact": 0.55,
+   "reach": 0.235,
+   "hand": "LeftHand"
   },
   "cross": {
    "frames": 35,
    "duration": 1.75,
    "impact": 1.1,
-   "reach": 0.585,
+   "reach": 0.693,
    "hand": "RightHand"
   },
   "duck": {
    "frames": 31,
    "duration": 1.55,
-   "impact": 0.55,
-   "reach": 0.477,
+   "impact": 1.15,
+   "reach": 0.653,
    "hand": "LeftHand"
   },
   "getup": {
    "frames": 99,
    "duration": 4.95,
-   "impact": 0.0,
-   "reach": 0.915,
+   "impact": 0.85,
+   "reach": 0.993,
    "hand": "RightHand"
   },
   "hit": {
    "frames": 29,
    "duration": 1.45,
-   "impact": 1.1,
-   "reach": 0.4,
-   "hand": "RightHand"
+   "impact": 0.65,
+   "reach": 0.31,
+   "hand": "LeftHand"
   },
   "hitBig": {
    "frames": 49,
    "duration": 2.45,
-   "impact": 0.85,
-   "reach": 0.388,
-   "hand": "RightHand"
+   "impact": 0.35,
+   "reach": 0.385,
+   "hand": "LeftHand"
   },
   "hook": {
    "frames": 35,
    "duration": 1.75,
-   "impact": 1.4,
-   "reach": 0.475,
+   "impact": 1.45,
+   "reach": 0.678,
    "hand": "LeftHand"
   },
   "idle": {
    "frames": 79,
    "duration": 3.95,
    "impact": 0.5,
-   "reach": 0.194,
+   "reach": 0.411,
    "hand": "LeftHand"
   },
   "jab": {
    "frames": 31,
    "duration": 1.55,
    "impact": 1.0,
-   "reach": 0.535,
+   "reach": 0.79,
    "hand": "LeftHand"
   },
   "ko": {
    "frames": 79,
    "duration": 3.95,
-   "impact": 1.2,
-   "reach": 0.933,
+   "impact": 1.45,
+   "reach": 1.073,
    "hand": "LeftHand"
   },
   "slipL": {
    "frames": 27,
    "duration": 1.35,
-   "impact": 0.5,
-   "reach": 0.381,
+   "impact": 0.4,
+   "reach": 0.226,
    "hand": "RightHand"
   },
   "slipR": {
    "frames": 27,
    "duration": 1.35,
-   "impact": 0.5,
-   "reach": 0.367,
+   "impact": 0.4,
+   "reach": 0.226,
    "hand": "RightHand"
   },
   "stepB": {
    "frames": 29,
    "duration": 1.45,
-   "impact": 0.45,
-   "reach": 0.361,
+   "impact": 0.65,
+   "reach": 0.551,
    "hand": "LeftHand"
   },
   "stepF": {
    "frames": 29,
    "duration": 1.45,
-   "impact": 0.45,
-   "reach": 0.31,
-   "hand": "RightHand"
+   "impact": 0.1,
+   "reach": 0.268,
+   "hand": "LeftHand"
   },
   "stepL": {
    "frames": 29,
    "duration": 1.45,
-   "impact": 0.8,
-   "reach": 0.365,
-   "hand": "RightHand"
+   "impact": 0.85,
+   "reach": 0.293,
+   "hand": "LeftHand"
   },
   "stepR": {
    "frames": 29,
    "duration": 1.45,
-   "impact": 0.6,
-   "reach": 0.284,
-   "hand": "RightHand"
+   "impact": 0.85,
+   "reach": 0.254,
+   "hand": "LeftHand"
   },
   "upper": {
    "frames": 35,
    "duration": 1.75,
-   "impact": 1.55,
-   "reach": 0.302,
+   "impact": 1.05,
+   "reach": 0.512,
    "hand": "LeftHand"
   },
   "win": {
    "frames": 79,
    "duration": 3.95,
-   "impact": 1.4,
-   "reach": 0.71,
+   "impact": 0.85,
+   "reach": 0.562,
    "hand": "RightHand"
   }
  },
@@ -135,234 +135,182 @@
  "scale": 112.39007009588276,
  "retarget": {
   "block": {
-   "bones": 18,
+   "bones": 21,
    "frames": [
     1,
     50
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "LeftToeBase",
-    "RightShoulder",
-    "Spine1"
+    "LeftToeBase"
    ]
   },
   "cross": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     36
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "duck": {
-   "bones": 19,
+   "bones": 21,
    "frames": [
     1,
     32
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "LeftToeBase",
-    "RightShoulder"
+    "LeftToeBase"
    ]
   },
   "getup": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     100
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "hit": {
-   "bones": 19,
+   "bones": 22,
    "frames": [
     1,
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder",
-    "Spine1"
-   ]
+   "skipped_no_channel": []
   },
   "hitBig": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     50
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "hook": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     36
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "idle": {
-   "bones": 16,
+   "bones": 20,
    "frames": [
     1,
     80
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
     "LeftToeBase",
-    "RightShoulder",
-    "RightToeBase",
-    "Spine",
-    "Spine1"
+    "RightToeBase"
    ]
   },
   "jab": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     32
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "ko": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     80
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "slipL": {
-   "bones": 19,
+   "bones": 21,
    "frames": [
     1,
     28
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "LeftToeBase",
-    "RightShoulder"
+    "LeftToeBase"
    ]
   },
   "slipR": {
-   "bones": 19,
+   "bones": 21,
    "frames": [
     1,
     28
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "LeftToeBase",
-    "RightShoulder"
+    "LeftToeBase"
    ]
   },
   "stepB": {
-   "bones": 19,
+   "bones": 22,
    "frames": [
     1,
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder",
-    "Spine1"
-   ]
+   "skipped_no_channel": []
   },
   "stepF": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "stepL": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "stepR": {
-   "bones": 20,
+   "bones": 22,
    "frames": [
     1,
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder"
-   ]
+   "skipped_no_channel": []
   },
   "upper": {
-   "bones": 19,
+   "bones": 21,
    "frames": [
     1,
     36
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder",
     "RightToeBase"
    ]
   },
   "win": {
-   "bones": 19,
+   "bones": 21,
    "frames": [
     1,
     80
    ],
    "scale_k": 0.0113,
    "skipped_no_channel": [
-    "LeftShoulder",
-    "RightShoulder",
     "RightToeBase"
    ]
   }
  },
- "glb_kb": 2254
+ "glb_kb": 2285
 }

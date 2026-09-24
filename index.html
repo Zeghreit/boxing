@@ -139,7 +139,7 @@ body.replay #rbadge{display:block;animation:blink 1.2s infinite}
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.4</span></div>
+  <div class="brand">Бокс <span>0.4b</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -209,7 +209,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 const UP = V(0, 1, 0), ZF = V(0, 0, 1);
 const ROUND_T = 60, ROUNDS = 3, RING = 2.85;
-let GETUP_T = 1.1; const ANIM_MAX = 1.4;   // max clip playback speed
+let GETUP_T = 1.1; const ANIM_MAX = 1.4; const CLIP_W = { duck: .6 };   // max clip playback speed
 
 /* ---------- удары ---------- */
 const PUNCH = {
@@ -778,6 +778,7 @@ class Fighter {
     }
     this.cur = null; this.animKey = ''; this.seq = 0;
     this.hipsB = findB(/Hips$/);
+    this.fixYaw(findB(/Spine2$/));
     this.measureKO(this.hipsB);
   }
   /* Нокаут и подъём Mixamo не стыкуются: ko падает лицом вниз по диагонали и уезжает ~1.5 м,
@@ -785,6 +786,33 @@ class Fighter {
      (таз и направление таз->голова), а в getUp() переносим/поворачиваем бойца так, чтобы
      первый кадр подъёма лёг ровно на последний кадр нокаута. Горизонтальный уход таза
      в самом подъёме срезаем - встаёт на месте. */
+  /* Куда клипы на самом деле бьют. ARDY ставит бойца в боевую стойку, развёрнутую относительно
+     своего «вперёд»: джеб и кросс уходили на 25-45° вправо от соперника. Меряем направление
+     максимального выноса руки в джебе и кроссе (горизонталь, от груди) и доворачиваем модель внутри
+     root так, чтобы удары шли в соперника. */
+  fixYaw(chest) {
+    this.yawFix = 0;
+    if (!chest || !this.arms) return;
+    const dirs = [];
+    for (const name of ['jab', 'cross']) {
+      const a = this.acts[name]; if (!a) continue;
+      a.reset(); a.enabled = true; a.setEffectiveWeight(1); a.play();
+      let best = -1, dir = 0;
+      for (let i = 0; i <= 30; i++) {
+        a.time = a.getClip().duration * i / 30; this.mixer.update(0); this.model.updateMatrixWorld(true);
+        const c = this.model.worldToLocal(chest.getWorldPosition(V()));
+        for (const k of ['L', 'R']) {
+          const h = this.model.worldToLocal(this.arms[k].hand.getWorldPosition(V())).sub(c); h.y = 0;
+          if (h.length() > best) { best = h.length(); dir = Math.atan2(h.x, h.z); }
+        }
+      }
+      a.stop(); dirs.push(dir);
+    }
+    if (!dirs.length) return;
+    this.yawFix = clamp(-dirs.reduce((s, x) => s + x, 0) / dirs.length, -1.05, 1.05);
+    this.model.rotation.y = this.yawFix;
+    this.mixer.update(0);
+  }
   measureKO(hips) {
     this.koAlign = null;
     const ko = this.acts.ko, gu = this.acts.getup;
@@ -809,7 +837,11 @@ class Fighter {
         for (let j = 0; j < 3; j++) if (j !== vert) tr.values[i + j] = tr.values[j];
     }
     const k = this.model.scale.x;   // локаль модели -> метры корня
-    this.koAlign = { ex: e.x * k, ez: e.z * k, sx: s.x * k, sz: s.z * k, dyaw: e.yaw - s.yaw };
+    // локаль модели -> локаль root: модель довёрнута на yawFix (fixYaw)
+    const cy = Math.cos(this.yawFix || 0), sy = Math.sin(this.yawFix || 0);
+    const R = p => ({ x: (p.x * cy + p.z * sy) * k, z: (-p.x * sy + p.z * cy) * k });
+    const e2 = R(e), s2 = R(s);
+    this.koAlign = { ex: e2.x, ez: e2.z, sx: s2.x, sz: s2.z, dyaw: e.yaw - s.yaw };
     this.mixer.update(0);
   }
   alignGetup() {
@@ -856,6 +888,9 @@ class Fighter {
       if (fade > 0) a.crossFadeFrom(this.cur, fade, false);
       else this.cur.stop();   // жёсткий стык (подъём после нокаута: позы уже совмещены переносом корня)
     }
+    // ARDY-нырок складывается почти до пола (голова опускается на ~35%) - играем его на 60%,
+    // остальное добирает слой стойки (guard-веса = 1 - сумма весов клипов)
+    a.weight = CLIP_W[name] || 1;
     this.cur = a;
   }
   animate(dt) {
