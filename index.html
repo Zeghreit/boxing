@@ -129,9 +129,11 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
   <div class="row"><button class="mbtn normal" id="againBtn">Реванш</button><button class="mbtn" id="menuBtn">В меню</button></div>
 </div>
 
-<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const loader = new GLTFLoader();
 
 const $ = id => document.getElementById(id);
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -201,10 +203,11 @@ function buildRing() {
   top.rotation.x = -Math.PI / 2; top.position.y = .002; top.receiveShadow = true; g.add(top);
   const P = 3.3;
   const postGeo = new THREE.CylinderGeometry(.07, .07, 1.45, 12), postMat = mat(0x9ca3af, .3);
+  const corners = new THREE.Group(); corners.name = 'procCorners'; g.add(corners);
   for (const [x, z, col] of [[P, P, 0xef4444], [-P, -P, 0x3b82f6], [P, -P, 0xe5e7eb], [-P, P, 0xe5e7eb]]) {
-    const post = new THREE.Mesh(postGeo, postMat); post.position.set(x, .72, z); g.add(post);
+    const post = new THREE.Mesh(postGeo, postMat); post.position.set(x, .72, z); corners.add(post);
     const pad = new THREE.Mesh(new THREE.BoxGeometry(.2, .95, .2), mat(col));
-    pad.position.set(x - Math.sign(x) * .1, .75, z - Math.sign(z) * .1); g.add(pad);
+    pad.position.set(x - Math.sign(x) * .1, .75, z - Math.sign(z) * .1); corners.add(pad);
   }
   const ropeGeo = new THREE.CylinderGeometry(.025, .025, P * 2, 8), ropeMat = mat(0xf3f4f6, .4);
   for (const h of [.45, .8, 1.15]) for (const s of [-1, 1]) {
@@ -226,8 +229,58 @@ function buildRing() {
   }
   g.add(crowd);
   scene.add(g);
+  return g;
 }
-buildRing();
+const ring = buildRing();
+
+/* ---------- пропы AssetForge ---------- */
+function recolor(tex, mode) {
+  const img = tex.image, c = document.createElement('canvas');
+  c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const r = p[i], g = p[i + 1], b = p[i + 2];
+    if (mode === 'blue') { p[i] = b; p[i + 2] = r; }
+    else { const l = Math.min(255, (r + g + b) / 3 * .55 + r * .45 + 20); p[i] = p[i + 1] = p[i + 2] = l; }
+  }
+  x.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = tex.colorSpace; t.flipY = tex.flipY; return t;
+}
+function prepModel(root) {
+  root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return root;
+}
+async function loadProps() {
+  const [post, stool, bucket] = await Promise.all(['corner_post', 'stool', 'bucket'].map(n => loader.loadAsync(`models/${n}.glb`)));
+  // где стойка и куда смотрят крюки: среднее вершин ≈ стойка, центр bbox смещён в сторону крюков
+  const mesh = post.scene.getObjectByProperty('isMesh', true);
+  const pos = mesh.geometry.attributes.position, mean = V();
+  for (let i = 0; i < pos.count; i++) mean.add(V(pos.getX(i), 0, pos.getZ(i)));
+  mean.divideScalar(pos.count);
+  const box = new THREE.Box3().setFromBufferAttribute(pos), ctr = box.getCenter(V()).setY(0);
+  const hookDir = Math.atan2(ctr.x - mean.x, ctr.z - mean.z);
+  const baseMap = mesh.material.map;
+  const maps = { red: baseMap, blue: baseMap && recolor(baseMap, 'blue'), white: baseMap && recolor(baseMap, 'white') };
+  const P = 3.3;
+  for (const [x, z, col] of [[P, P, 'red'], [-P, -P, 'blue'], [P, -P, 'white'], [-P, P, 'white']]) {
+    const inst = prepModel(post.scene.clone(true));
+    inst.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); if (maps[col]) o.material.map = maps[col]; } });
+    const piv = new THREE.Group(); piv.add(inst); inst.position.set(-mean.x, 0, -mean.z);
+    inst.rotation.y = 0;
+    const toCenter = Math.atan2(-x, -z);
+    piv.rotation.y = toCenter - hookDir;
+    inst.position.applyAxisAngle(UP, 0);
+    piv.position.set(x, 0, z);
+    scene.add(piv);
+  }
+  ring.getObjectByName('procCorners').visible = false;
+  const s1 = prepModel(stool.scene.clone(true)); s1.position.set(3.58, 0, 2.55); scene.add(s1);
+  const s2 = prepModel(stool.scene); s2.position.set(-3.58, 0, -2.55); scene.add(s2);
+  const b1 = prepModel(bucket.scene.clone(true)); b1.position.set(3.55, 0, 1.95); b1.rotation.y = 1.2; scene.add(b1);
+  const b2 = prepModel(bucket.scene); b2.position.set(-3.55, 0, -1.95); b2.rotation.y = -2; scene.add(b2);
+}
+loadProps().catch(e => console.warn('props: fallback to primitives', e));
 
 /* ---------- звук ---------- */
 const sfx = (() => {
