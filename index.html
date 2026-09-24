@@ -492,6 +492,20 @@ class Fighter {
     this.mixer = new THREE.AnimationMixer(this.model);
     this.acts = {};
     for (const c of gltf.animations) this.acts[c.name] = this.mixer.clipAction(c);
+    // Слои: клипы шагов Mixamo разваливают стойку (перчатки уходят от лица на ~0.5 м).
+    // Шаги оставляем только для ног и таза, корпус/руки/голову берём из боксёрского idle.
+    const UPPER = /(Spine|Neck|Head|Shoulder|Arm|Hand)/;
+    const clip = n => gltf.animations.find(c => c.name === n);
+    const bone = t => t.name.split('.')[0];
+    const idleC = clip('idle');
+    if (idleC) {
+      const up = new THREE.AnimationClip('idleUpper', idleC.duration, idleC.tracks.filter(t => UPPER.test(bone(t))));
+      this.upper = this.mixer.clipAction(up); this.upper.play(); this.upper.setEffectiveWeight(0); this.upperW = 0;
+    }
+    for (const k of ['stepF', 'stepB', 'stepL', 'stepR']) {
+      const c = clip(k);
+      if (c) this.acts[k] = this.mixer.clipAction(new THREE.AnimationClip(k + 'Legs', c.duration, c.tracks.filter(t => !UPPER.test(bone(t)))));
+    }
     this.cur = null; this.animKey = ''; this.seq = 0;
   }
   dur(name) { const a = this.acts[name]; return a ? a.getClip().duration : 1; }
@@ -534,6 +548,13 @@ class Fighter {
     }
     if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
     if (s === 'block' && this.cur && this.cur.time > this.dur('block') * .38) this.cur.paused = true;
+    if (this.upper) {
+      // верх из idle добирает ровно то, чего не хватает полным клипам (иначе руки
+      // на переходах проваливаются в позу рига)
+      let full = 0;
+      for (const [k, a] of Object.entries(this.acts)) if (!/^step/.test(k) && a.isRunning()) full += a.getEffectiveWeight();
+      this.upper.setEffectiveWeight(clamp(1 - full, 0, 1));
+    }
     this.mixer.update(dt);
     // процедурный уклон: наклон позвоночника вбок + сдвиг таза, стойка не меняется
     const t = this.t, env = t < .3 ? smooth(t / .09) : 1 - smooth((t - .3) / .2);
@@ -1042,7 +1063,7 @@ function frame(now) {
 }
 placeFighters();
 requestAnimationFrame(frame);
-window.__game = { game, player, enemy, PUNCH };
+window.__game = { game, player, enemy, PUNCH, input };
 </script>
 </body>
 </html>
