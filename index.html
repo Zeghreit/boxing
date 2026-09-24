@@ -107,7 +107,7 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.2f</span></div>
+  <div class="brand">Бокс <span>0.2g</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -514,9 +514,13 @@ class Fighter {
   }
   face(opp, dt) {
     if (this.state === 'down' || this.state === 'ko') return;
+    // подъём Mixamo встаёт развернувшись на ~140° от того, как лёг: лёжа не крутим,
+    // а со второй половины подъёма (уже на ногах) плавно доворачиваемся к сопернику
+    const rising = this.model && this.state === 'getup';
+    if (rising && this.t < GETUP_T * .55) return;
     const want = Math.atan2(opp.pos.x - this.pos.x, opp.pos.z - this.pos.z);
     let d = want - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
-    this.yaw += d * (1 - Math.exp(-dt * 14));
+    this.yaw += d * (1 - Math.exp(-dt * (rising ? 4.5 : 14)));
   }
   /* ---- модель AssetForge + клипы Mixamo ---- */
   attach(gltf, meta, scale = 1) {
@@ -568,6 +572,50 @@ class Fighter {
       a.play(); a.setEffectiveWeight(0); this.guard[g] = a;
     }
     this.cur = null; this.animKey = ''; this.seq = 0;
+    this.measureKO(findB(/Hips$/));
+  }
+  /* Нокаут и подъём Mixamo не стыкуются: ko падает лицом вниз по диагонали и уезжает ~1.5 м,
+     getup начинается лёжа в точке 0 и повёрнут на ~55°. Меряем обе позы в локали модели
+     (таз и направление таз->голова), а в getUp() переносим/поворачиваем бойца так, чтобы
+     первый кадр подъёма лёг ровно на последний кадр нокаута. Горизонтальный уход таза
+     в самом подъёме срезаем - встаёт на месте. */
+  measureKO(hips) {
+    this.koAlign = null;
+    const ko = this.acts.ko, gu = this.acts.getup;
+    if (!hips || !ko || !gu) return;
+    const pose = (a, t) => {
+      a.reset(); a.enabled = true; a.setEffectiveWeight(1); a.play(); a.time = t;
+      this.mixer.update(0); this.model.updateMatrixWorld(true);
+      const hp = this.model.worldToLocal(hips.getWorldPosition(V()));
+      const hd = this.model.worldToLocal(this.headBone.getWorldPosition(V()));
+      a.stop();
+      return { x: hp.x, z: hp.z, yaw: Math.atan2(hd.x - hp.x, hd.z - hp.z) };
+    };
+    const e = pose(ko, ko.getClip().duration), s = pose(gu, 0);
+    // срезать горизонтальный уход таза в подъёме (оставляем значения первого кадра)
+    const tr = gu.getClip().tracks.find(t => t.name === hips.name + '.position');
+    if (tr) {
+      // вертикаль в системе родителя таза (у Mixamo-армaтуры она не обязательно Y)
+      const pq = hips.parent.getWorldQuaternion(new THREE.Quaternion()).invert();
+      const vu = UP.clone().applyQuaternion(pq), ax = [Math.abs(vu.x), Math.abs(vu.y), Math.abs(vu.z)];
+      const vert = ax.indexOf(Math.max(...ax));
+      for (let i = 0; i < tr.values.length; i += 3)
+        for (let j = 0; j < 3; j++) if (j !== vert) tr.values[i + j] = tr.values[j];
+    }
+    const k = this.model.scale.x;   // локаль модели -> метры корня
+    this.koAlign = { ex: e.x * k, ez: e.z * k, sx: s.x * k, sz: s.z * k, dyaw: e.yaw - s.yaw };
+    this.mixer.update(0);
+  }
+  alignGetup() {
+    const A = this.koAlign; if (!A) return;
+    // мировая точка таза в конце нокаута
+    const c = Math.cos(this.yaw), s = Math.sin(this.yaw);
+    const ex = this.pos.x + A.ex * c + A.ez * s, ez = this.pos.z - A.ex * s + A.ez * c;
+    this.yaw += A.dyaw;
+    const c2 = Math.cos(this.yaw), s2 = Math.sin(this.yaw);
+    this.pos.x = ex - (A.sx * c2 + A.sz * s2);
+    this.pos.z = ez - (-A.sx * s2 + A.sz * c2);
+    this.pos.x = clamp(this.pos.x, -RING, RING); this.pos.z = clamp(this.pos.z, -RING, RING);
   }
   /* Высокая защита: 2-костный IK на каждую руку. Цель кисти - перед лбом со своей стороны,
      локоть вниз-вперёд-наружу, перчатка «смотрит» вверх. Смешивание с анимацией - slerp по w. */
@@ -598,7 +646,10 @@ class Fighter {
     a.reset(); a.enabled = true; a.setEffectiveWeight(1);
     a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
     a.clampWhenFinished = once; a.timeScale = ts; a.paused = false; a.play();
-    if (this.cur && this.cur !== a) a.crossFadeFrom(this.cur, fade, false);
+    if (this.cur && this.cur !== a) {
+      if (fade > 0) a.crossFadeFrom(this.cur, fade, false);
+      else this.cur.stop();   // жёсткий стык (подъём после нокаута: позы уже совмещены переносом корня)
+    }
     this.cur = a;
   }
   animate(dt) {
@@ -622,8 +673,8 @@ class Fighter {
     } else if (s === 'stun') {
       key = 's' + this.seq; name = this.stunT > .38 ? 'hitBig' : 'hit';
       ts = clamp(this.dur(name) / (this.stunT + .35), .8, 3); fade = .05;
-    } else if (s === 'down' || s === 'ko') { key = 'ko'; name = 'ko'; ts = 1.25; }
-    else if (s === 'getup') { key = 'g'; name = 'getup'; ts = this.dur('getup') / GETUP_T; }
+    } else if (s === 'down' || s === 'ko') { key = 'ko'; name = 'ko'; ts = this.dur('ko') / 2.4; }   // лечь до самого раннего подъёма
+    else if (s === 'getup') { key = 'g'; name = 'getup'; ts = this.dur('getup') / GETUP_T; fade = 0; }
     else if (s === 'win') { key = 'w'; name = 'win'; once = false; }
     else {
       once = false; fade = .2;
@@ -924,6 +975,7 @@ function getUp(f) {
   $('getup').classList.remove('on');
   game.state = 'resume';
   f.state = 'getup'; f.t = 0;
+  if (f.model) f.alignGetup();
   f.hp = Math.max(f.hp, 50 - 12 * f.knock); f.st = Math.max(f.st, 60);
   const d = V().subVectors(o.pos, f.pos).setY(0).normalize();
   o.pos.copy(f.pos).addScaledVector(d, 2);
@@ -942,7 +994,7 @@ function updateCount(dt) {
   if (c.f.isPlayer) {
     c.up = Math.max(0, c.up - dt * .22);
     $('gBar').style.width = (Math.min(1, c.up) * 100) + '%';
-    if (c.up >= 1 && c.n >= 1) return getUp(c.f);
+    if (c.up >= 1 && c.n >= 2) return getUp(c.f);   // n>=2: клип нокаута успевает дойти до последнего кадра
   }
   if (c.t >= 1) {
     c.t -= 1; c.n++;
