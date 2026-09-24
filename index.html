@@ -856,7 +856,7 @@ function updateCamera(dt) {
     const f = V().subVectors(enemy.pos, player.pos).setY(0).normalize();
     const r = V(-f.z, 0, f.x);
     const portrait = camera.aspect < 1;
-    const dist = portrait ? 3.1 : 2.5, h = portrait ? 2.25 : 2.0, side = portrait ? .55 : .85;
+    const dist = portrait ? 3.3 : 2.5, h = portrait ? 3.0 : 2.0, side = portrait ? .75 : .85;
     const target = player.pos.clone().addScaledVector(f, -dist).addScaledVector(r, side).add(V(0, h, 0));
     camera.position.lerp(target, k);
     camLook.lerp(player.pos.clone().lerp(enemy.pos, .8).add(V(0, 1.15, 0)).addScaledVector(r, -.15), k);
