@@ -1,0 +1,135 @@
+{
+ "clips": {
+  "idle": {
+   "frames": 66,
+   "duration": 2.2,
+   "impact": 0.8,
+   "reach": 0.336,
+   "hand": "LeftHand"
+  },
+  "jab": {
+   "frames": 52,
+   "duration": 1.733,
+   "impact": 0.5,
+   "reach": 0.477,
+   "hand": "LeftHand"
+  },
+  "cross": {
+   "frames": 26,
+   "duration": 0.867,
+   "impact": 0.3,
+   "reach": 0.482,
+   "hand": "RightHand"
+  },
+  "hook": {
+   "frames": 60,
+   "duration": 2.0,
+   "impact": 0.7,
+   "reach": 0.407,
+   "hand": "RightHand"
+  },
+  "upper": {
+   "frames": 66,
+   "duration": 2.2,
+   "impact": 0.767,
+   "reach": 0.498,
+   "hand": "LeftHand"
+  },
+  "block": {
+   "frames": 46,
+   "duration": 1.533,
+   "impact": 0.6,
+   "reach": 0.584,
+   "hand": "RightHand"
+  },
+  "slipR": {
+   "frames": 43,
+   "duration": 1.433,
+   "impact": 0.533,
+   "reach": 0.361,
+   "hand": "RightHand"
+  },
+  "slipL": {
+   "frames": 43,
+   "duration": 1.433,
+   "impact": 0.533,
+   "reach": 0.361,
+   "hand": "LeftHand"
+  },
+  "duck": {
+   "frames": 70,
+   "duration": 2.333,
+   "impact": 1.467,
+   "reach": 0.507,
+   "hand": "RightHand"
+  },
+  "hit": {
+   "frames": 36,
+   "duration": 1.2,
+   "impact": 0.467,
+   "reach": 0.502,
+   "hand": "RightHand"
+  },
+  "hitBig": {
+   "frames": 73,
+   "duration": 2.433,
+   "impact": 0.9,
+   "reach": 0.579,
+   "hand": "LeftHand"
+  },
+  "ko": {
+   "frames": 168,
+   "duration": 5.6,
+   "impact": 1.033,
+   "reach": 0.531,
+   "hand": "LeftHand"
+  },
+  "getup": {
+   "frames": 228,
+   "duration": 7.6,
+   "impact": 0.8,
+   "reach": 0.777,
+   "hand": "LeftHand"
+  },
+  "win": {
+   "frames": 135,
+   "duration": 4.5,
+   "impact": 2.233,
+   "reach": 0.671,
+   "hand": "LeftHand"
+  },
+  "stepF": {
+   "frames": 30,
+   "duration": 1.0,
+   "impact": 0.933,
+   "reach": 0.404,
+   "hand": "LeftHand"
+  },
+  "stepB": {
+   "frames": 25,
+   "duration": 0.833,
+   "impact": 0.033,
+   "reach": 0.402,
+   "hand": "LeftHand"
+  },
+  "stepL": {
+   "frames": 31,
+   "duration": 1.033,
+   "impact": 0.233,
+   "reach": 0.397,
+   "hand": "RightHand"
+  },
+  "stepR": {
+   "frames": 37,
+   "duration": 1.233,
+   "impact": 0.567,
+   "reach": 0.416,
+   "hand": "RightHand"
+  }
+ },
+ "height": 1.8,
+ "tris": 9230,
+ "bones": 33,
+ "scale": 110.64623753648769,
+ "glb_kb": 2467
+}

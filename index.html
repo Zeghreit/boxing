@@ -143,6 +143,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 const UP = V(0, 1, 0), ZF = V(0, 0, 1);
 const ROUND_T = 60, ROUNDS = 3, RING = 2.85;
+let GETUP_T = 1.1;
 
 /* ---------- удары ---------- */
 const PUNCH = {
@@ -415,13 +416,13 @@ class Fighter {
   }
   tryDodge(d) {
     if (!this.canAct() || this.st < 6) return;
-    this.state = 'dodge'; this.dd = d; this.t = 0; this.st -= 7;
+    this.state = 'dodge'; this.dd = d; this.t = 0; this.st -= 7; this.seq = (this.seq || 0) + 1;
   }
   setBlock(b) {
-    if (b && this.state === 'idle') { this.state = 'block'; this.t = 0; }
+    if (b && this.state === 'idle') { this.state = 'block'; this.t = 0; this.seq = (this.seq || 0) + 1; }
     else if (!b && this.state === 'block') this.state = 'idle';
   }
-  stun(time) { this.state = 'stun'; this.t = 0; this.stunT = time; this.buffer = null; }
+  stun(time) { this.state = 'stun'; this.t = 0; this.stunT = time; this.buffer = null; this.seq = (this.seq || 0) + 1; }
   dodging() { return this.state === 'dodge' && this.t < .32; }
   ext() {
     const P = PUNCH[this.pn];
@@ -446,7 +447,7 @@ class Fighter {
       }
       case 'dodge': if (this.t >= .5) { this.state = 'idle'; this.t = 0; } break;
       case 'stun': if (this.t >= this.stunT) { this.state = 'idle'; this.t = 0; } break;
-      case 'getup': if (this.t >= 1.1) { this.state = 'idle'; this.t = 0; } break;
+      case 'getup': if (this.t >= GETUP_T) { this.state = 'idle'; this.t = 0; } break;
     }
   }
   move(mx, mz, dt, opp) {
@@ -468,9 +469,68 @@ class Fighter {
     let d = want - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
     this.yaw += d * (1 - Math.exp(-dt * 14));
   }
+  /* ---- модель AssetForge + клипы Mixamo ---- */
+  attach(gltf, meta, scale = 1) {
+    this.model = gltf.scene; this.meta = meta;
+    this.model.scale.multiplyScalar(scale);
+    this.model.traverse(o => {
+      if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; }
+      if (o.isBone && /Head$/.test(o.name)) this.headBone = o;
+    });
+    this.body.visible = false; this.root.add(this.model);
+    this.mixer = new THREE.AnimationMixer(this.model);
+    this.acts = {};
+    for (const c of gltf.animations) this.acts[c.name] = this.mixer.clipAction(c);
+    this.cur = null; this.animKey = ''; this.seq = 0;
+  }
+  dur(name) { const a = this.acts[name]; return a ? a.getClip().duration : 1; }
+  play(name, once, ts, fade) {
+    const a = this.acts[name] || this.acts.idle; if (!a) return;
+    a.reset(); a.enabled = true; a.setEffectiveWeight(1);
+    a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    a.clampWhenFinished = once; a.timeScale = ts; a.paused = false; a.play();
+    if (this.cur && this.cur !== a) a.crossFadeFrom(this.cur, fade, false);
+    this.cur = a;
+  }
+  animate(dt) {
+    const s = this.state, P = this.pn ? PUNCH[this.pn] : null;
+    let key, name, once = true, ts = 1, fade = .1;
+    if (s === 'punch') {
+      key = 'p' + this.pid; name = this.pn; fade = .05;
+      const imp = (this.meta.clips[name] || {}).impact || .3;
+      ts = clamp(imp / (P.startup * this.spd), .7, 2.6);
+    } else if (s === 'block') { key = 'b' + this.seq; name = 'block'; ts = 1.8; fade = .07; }
+    else if (s === 'dodge') {
+      key = 'd' + this.seq; name = this.dd === 'D' ? 'duck' : this.dd === 'L' ? 'slipL' : 'slipR';
+      ts = this.dur(name) / .6; fade = .05;
+    } else if (s === 'stun') {
+      key = 's' + this.seq; name = this.stunT > .38 ? 'hitBig' : 'hit';
+      ts = clamp(this.dur(name) / (this.stunT + .35), .8, 3); fade = .05;
+    } else if (s === 'down' || s === 'ko') { key = 'ko'; name = 'ko'; ts = 1.25; }
+    else if (s === 'getup') { key = 'g'; name = 'getup'; ts = this.dur('getup') / GETUP_T; }
+    else if (s === 'win') { key = 'w'; name = 'win'; once = false; }
+    else {
+      once = false; fade = .2;
+      const lv = V(this.vel.x, 0, this.vel.z).applyAxisAngle(UP, -this.yaw), sp = lv.length();
+      if (sp < .3) name = 'idle';
+      else if (Math.abs(lv.z) >= Math.abs(lv.x)) name = lv.z > 0 ? 'stepF' : 'stepB';
+      else name = lv.x > 0 ? 'stepL' : 'stepR';
+      key = 'l' + name; ts = name === 'idle' ? 1 : clamp(sp / 1.1, .7, 1.6);
+      if (this.cur && this.animKey === key) this.cur.timeScale = ts;
+    }
+    if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
+    if (s === 'block' && this.cur && this.cur.time > this.dur('block') * .38) this.cur.paused = true;
+    this.mixer.update(dt);
+  }
   pose(dt, opp, time) {
     const s = this.state, t = this.t, P = this.pn ? PUNCH[this.pn] : null, m = this.m;
     this.root.position.copy(this.pos); this.root.rotation.y = this.yaw;
+    if (this.model) {
+      this.animate(dt);
+      this.root.updateMatrixWorld(true);
+      this.headBone.getWorldPosition(this.headW); this.headW.y += .06;
+      return;
+    }
     let duck = 0, slip = 0, lean = .1, tw = 0, e = 0, lunge = 0;
     const bob = (s === 'idle' || s === 'block') ? Math.sin(time * 5.5 + this.ph0) * .014 : 0;
     if (s === 'block') { lean = .16; duck = .04; }
@@ -572,6 +632,21 @@ class Fighter {
 
 const player = new Fighter({ isPlayer: true, skin: 0xe0b08a, glove: 0x2563eb, trunks: 0x1e3a8a, belt: 0xf8fafc, hair: 0x3b2a1a });
 const enemy = new Fighter({ isPlayer: false, skin: 0x9a6a48, glove: 0xdc2626, trunks: 0x7f1d1d, belt: 0xfbbf24, hair: 0x111111 });
+
+/* ---------- бойцы AssetForge (если не загрузились - остаются болванки) ---------- */
+async function loadFighters() {
+  const get = n => Promise.all([loader.loadAsync(`models/${n}.glb`), fetch(`models/${n}.json`).then(r => r.json())]);
+  const [[pg, pm], [eg, em]] = await Promise.all([get('boxer_player'), get('boxer_enemy')]);
+  player.attach(pg, pm, 1); enemy.attach(eg, em, 1.03);
+  GETUP_T = 3.0;
+  // окно удара подстраивается под кадр попадания в клипе (замах читается, но не тянется)
+  for (const [k, P] of Object.entries(PUNCH)) {
+    const imp = (pm.clips[k] || {}).impact;
+    if (imp) P.startup = clamp(imp / 1.7, P.startup, P.startup * 1.8);
+  }
+  window.__game.models = true;
+}
+loadFighters().catch(e => console.warn('fighters: primitives', e));
 
 /* ---------- ИИ ---------- */
 const COMBOS = [['jab'], ['cross'], ['jab', 'cross'], ['jab', 'jab', 'cross'], ['jab', 'hook'], ['cross', 'hook'], ['hook', 'upper'], ['jab', 'cross', 'hook'], ['upper'], ['hook']];
@@ -712,7 +787,7 @@ function getUp(f) {
   f.hp = Math.max(f.hp, 50 - 12 * f.knock); f.st = Math.max(f.st, 60);
   const d = V().subVectors(o.pos, f.pos).setY(0).normalize();
   o.pos.copy(f.pos).addScaledVector(d, 2);
-  after(1.4, () => { if (game.state === 'resume') { game.state = 'fight'; msg('БОКС!', .9); } });
+  after(GETUP_T + .3, () => { if (game.state === 'resume') { game.state = 'fight'; msg('БОКС!', .9); } });
 }
 function ko(f) {
   const o = f === player ? enemy : player;
