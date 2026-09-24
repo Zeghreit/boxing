@@ -232,7 +232,9 @@ buildRing();
 /* ---------- звук ---------- */
 const sfx = (() => {
   let ac, nb;
+  const MUTE = new URLSearchParams(location.search).has('mute');
   function init() {
+    if (MUTE) return;
     if (!ac) {
       const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
       ac = new A();
@@ -854,10 +856,10 @@ function updateCamera(dt) {
     const f = V().subVectors(enemy.pos, player.pos).setY(0).normalize();
     const r = V(-f.z, 0, f.x);
     const portrait = camera.aspect < 1;
-    const dist = portrait ? 2.7 : 2.05, h = portrait ? 1.95 : 1.75;
-    const target = player.pos.clone().addScaledVector(f, -dist).addScaledVector(r, .42).add(V(0, h, 0));
+    const dist = portrait ? 3.1 : 2.5, h = portrait ? 2.25 : 2.0, side = portrait ? .55 : .85;
+    const target = player.pos.clone().addScaledVector(f, -dist).addScaledVector(r, side).add(V(0, h, 0));
     camera.position.lerp(target, k);
-    camLook.lerp(player.pos.clone().lerp(enemy.pos, .72).add(V(0, 1.2, 0)), k);
+    camLook.lerp(player.pos.clone().lerp(enemy.pos, .8).add(V(0, 1.15, 0)).addScaledVector(r, -.15), k);
   }
   const s = game.shake; game.shake *= Math.exp(-dt * 10);
   camera.lookAt(camLook.x + rand(-s, s), camLook.y + rand(-s, s), camLook.z);
