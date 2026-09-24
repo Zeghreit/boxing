@@ -5,126 +5,180 @@
    "duration": 2.45,
    "impact": 0.55,
    "reach": 0.235,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.026,
+   "vx": 0.003,
+   "vz": -0.026
   },
   "cross": {
    "frames": 35,
    "duration": 1.75,
    "impact": 1.1,
    "reach": 0.693,
-   "hand": "RightHand"
+   "hand": "RightHand",
+   "speed": 0.014,
+   "vx": 0.011,
+   "vz": -0.008
   },
   "duck": {
    "frames": 31,
    "duration": 1.55,
    "impact": 1.15,
    "reach": 0.653,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.023,
+   "vx": 0.017,
+   "vz": -0.016
   },
   "getup": {
    "frames": 99,
    "duration": 4.95,
    "impact": 0.85,
    "reach": 0.993,
-   "hand": "RightHand"
+   "hand": "RightHand",
+   "speed": 0.064,
+   "vx": -0.001,
+   "vz": 0.064
   },
   "hit": {
    "frames": 29,
    "duration": 1.45,
    "impact": 0.65,
    "reach": 0.31,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.057,
+   "vx": 0.056,
+   "vz": -0.01
   },
   "hitBig": {
    "frames": 49,
    "duration": 2.45,
    "impact": 0.35,
    "reach": 0.385,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.469,
+   "vx": -0.159,
+   "vz": -0.442
   },
   "hook": {
    "frames": 35,
    "duration": 1.75,
    "impact": 1.45,
    "reach": 0.678,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.021,
+   "vx": -0.02,
+   "vz": 0.008
   },
   "idle": {
    "frames": 79,
    "duration": 3.95,
    "impact": 0.5,
    "reach": 0.411,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.01,
+   "vx": 0.004,
+   "vz": -0.009
   },
   "jab": {
    "frames": 31,
    "duration": 1.55,
    "impact": 1.0,
    "reach": 0.79,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.014,
+   "vx": 0.014,
+   "vz": 0.001
   },
   "ko": {
    "frames": 79,
    "duration": 3.95,
    "impact": 1.45,
    "reach": 1.073,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.156,
+   "vx": 0.01,
+   "vz": -0.155
   },
   "slipL": {
    "frames": 27,
    "duration": 1.35,
    "impact": 0.4,
    "reach": 0.226,
-   "hand": "RightHand"
+   "hand": "RightHand",
+   "speed": 0.027,
+   "vx": 0.026,
+   "vz": -0.006
   },
   "slipR": {
    "frames": 27,
    "duration": 1.35,
    "impact": 0.4,
    "reach": 0.226,
-   "hand": "RightHand"
+   "hand": "RightHand",
+   "speed": 0.02,
+   "vx": 0.018,
+   "vz": -0.008
   },
   "stepB": {
-   "frames": 29,
-   "duration": 1.45,
-   "impact": 0.65,
-   "reach": 0.551,
-   "hand": "LeftHand"
+   "frames": 39,
+   "duration": 1.95,
+   "impact": 0.3,
+   "reach": 0.308,
+   "hand": "LeftHand",
+   "speed": 1.751,
+   "vx": -0.086,
+   "vz": -1.749
   },
   "stepF": {
-   "frames": 29,
-   "duration": 1.45,
-   "impact": 0.1,
-   "reach": 0.268,
-   "hand": "LeftHand"
+   "frames": 39,
+   "duration": 1.95,
+   "impact": 1.0,
+   "reach": 0.377,
+   "hand": "LeftHand",
+   "speed": 0.637,
+   "vx": 0.002,
+   "vz": 0.637
   },
   "stepL": {
-   "frames": 29,
-   "duration": 1.45,
-   "impact": 0.85,
-   "reach": 0.293,
-   "hand": "LeftHand"
+   "frames": 39,
+   "duration": 1.95,
+   "impact": 0.55,
+   "reach": 0.557,
+   "hand": "LeftHand",
+   "speed": 1.299,
+   "vx": 1.08,
+   "vz": -0.721
   },
   "stepR": {
-   "frames": 29,
-   "duration": 1.45,
-   "impact": 0.85,
-   "reach": 0.254,
-   "hand": "LeftHand"
+   "frames": 39,
+   "duration": 1.95,
+   "impact": 0.15,
+   "reach": 0.424,
+   "hand": "LeftHand",
+   "speed": 2.199,
+   "vx": -2.128,
+   "vz": -0.554
   },
   "upper": {
    "frames": 35,
    "duration": 1.75,
    "impact": 1.05,
    "reach": 0.512,
-   "hand": "LeftHand"
+   "hand": "LeftHand",
+   "speed": 0.006,
+   "vx": 0.006,
+   "vz": 0.001
   },
   "win": {
    "frames": 79,
    "duration": 3.95,
    "impact": 0.85,
    "reach": 0.562,
-   "hand": "RightHand"
+   "hand": "RightHand",
+   "speed": 0.006,
+   "vx": 0.005,
+   "vz": -0.002
   }
  },
  "height": 1.8,
@@ -143,7 +197,10 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "LeftToeBase"
-   ]
+   ],
+   "speed": 0.026,
+   "vx": 0.003,
+   "vz": -0.026
   },
   "cross": {
    "bones": 22,
@@ -152,7 +209,10 @@
     36
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.014,
+   "vx": 0.011,
+   "vz": -0.008
   },
   "duck": {
    "bones": 21,
@@ -163,7 +223,10 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "LeftToeBase"
-   ]
+   ],
+   "speed": 0.023,
+   "vx": 0.017,
+   "vz": -0.016
   },
   "getup": {
    "bones": 22,
@@ -172,7 +235,10 @@
     100
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.064,
+   "vx": -0.001,
+   "vz": 0.064
   },
   "hit": {
    "bones": 22,
@@ -181,7 +247,10 @@
     30
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.057,
+   "vx": 0.056,
+   "vz": -0.01
   },
   "hitBig": {
    "bones": 22,
@@ -190,7 +259,10 @@
     50
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.469,
+   "vx": -0.159,
+   "vz": -0.442
   },
   "hook": {
    "bones": 22,
@@ -199,7 +271,10 @@
     36
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.021,
+   "vx": -0.02,
+   "vz": 0.008
   },
   "idle": {
    "bones": 20,
@@ -211,7 +286,10 @@
    "skipped_no_channel": [
     "LeftToeBase",
     "RightToeBase"
-   ]
+   ],
+   "speed": 0.01,
+   "vx": 0.004,
+   "vz": -0.009
   },
   "jab": {
    "bones": 22,
@@ -220,7 +298,10 @@
     32
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.014,
+   "vx": 0.014,
+   "vz": 0.001
   },
   "ko": {
    "bones": 22,
@@ -229,7 +310,10 @@
     80
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.156,
+   "vx": 0.01,
+   "vz": -0.155
   },
   "slipL": {
    "bones": 21,
@@ -240,7 +324,10 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "LeftToeBase"
-   ]
+   ],
+   "speed": 0.027,
+   "vx": 0.026,
+   "vz": -0.006
   },
   "slipR": {
    "bones": 21,
@@ -251,43 +338,58 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "LeftToeBase"
-   ]
+   ],
+   "speed": 0.02,
+   "vx": 0.018,
+   "vz": -0.008
   },
   "stepB": {
    "bones": 22,
    "frames": [
     1,
-    30
+    40
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 1.751,
+   "vx": -0.086,
+   "vz": -1.749
   },
   "stepF": {
    "bones": 22,
    "frames": [
     1,
-    30
+    40
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 0.637,
+   "vx": 0.002,
+   "vz": 0.637
   },
   "stepL": {
    "bones": 22,
    "frames": [
     1,
-    30
+    40
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 1.299,
+   "vx": 1.08,
+   "vz": -0.721
   },
   "stepR": {
    "bones": 22,
    "frames": [
     1,
-    30
+    40
    ],
    "scale_k": 0.0113,
-   "skipped_no_channel": []
+   "skipped_no_channel": [],
+   "speed": 2.199,
+   "vx": -2.128,
+   "vz": -0.554
   },
   "upper": {
    "bones": 21,
@@ -298,7 +400,10 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "RightToeBase"
-   ]
+   ],
+   "speed": 0.006,
+   "vx": 0.006,
+   "vz": 0.001
   },
   "win": {
    "bones": 21,
@@ -309,8 +414,11 @@
    "scale_k": 0.0113,
    "skipped_no_channel": [
     "RightToeBase"
-   ]
+   ],
+   "speed": 0.006,
+   "vx": 0.005,
+   "vz": -0.002
   }
  },
- "glb_kb": 2285
+ "glb_kb": 2300
 }

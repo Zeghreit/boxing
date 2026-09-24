@@ -139,7 +139,7 @@ body.replay #rbadge{display:block;animation:blink 1.2s infinite}
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.4b</span></div>
+  <div class="brand">Бокс <span>0.4c</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -706,7 +706,7 @@ class Fighter {
     const s = this.state;
     const can = s === 'idle' || s === 'block' || s === 'punch';
     if (!can) mx = mz = 0;
-    const sp = s === 'block' ? .9 : s === 'punch' ? .45 : 1.8;
+    const sp = s === 'block' ? .8 : s === 'punch' ? .4 : 1.4;
     const f = V().subVectors(opp.pos, this.pos).setY(0).normalize();
     const r = V(-f.z, 0, f.x);
     const v = f.multiplyScalar(mz).addScaledVector(r, mx);
@@ -809,8 +809,21 @@ class Fighter {
       a.stop(); dirs.push(dir);
     }
     if (!dirs.length) return;
-    this.yawFix = clamp(-dirs.reduce((s, x) => s + x, 0) / dirs.length, -1.05, 1.05);
-    this.model.rotation.y = this.yawFix;
+    this.yawPunch = clamp(-dirs.reduce((s, x) => s + x, 0) / dirs.length, -1.05, 1.05);
+    // стойка: грудь (Spine2, ось +Z) развернуть на -12° от соперника (лёгкий «боковой» разворот
+    // правши), а не на -35..-40°, как её ставит ARDY
+    this.yawIdle = this.yawPunch;
+    const idle = this.acts.idle;
+    if (idle) {
+      idle.reset(); idle.enabled = true; idle.setEffectiveWeight(1); idle.play(); idle.time = 0;
+      this.mixer.update(0); this.model.updateMatrixWorld(true);
+      const q = this.model.getWorldQuaternion(new THREE.Quaternion()).invert();
+      const cf = chest.getWorldDirection(V()).applyQuaternion(q);
+      this.yawIdle = clamp(-.21 - Math.atan2(cf.x, cf.z), -1.2, 1.2);
+      idle.stop();
+    }
+    this.yawFix = this.yawIdle;          // нокдаун/подъём меряются в этой ориентации (measureKO)
+    this.model.rotation.y = this.yawIdle;
     this.mixer.update(0);
   }
   measureKO(hips) {
@@ -857,24 +870,31 @@ class Fighter {
   }
   /* Высокая защита: 2-костный IK на каждую руку. Цель кисти - перед лбом со своей стороны,
      локоть вниз-вперёд-наружу, перчатка «смотрит» вверх. Смешивание с анимацией - slerp по w. */
-  guardIK(w) {
+  // chin=false: высокий блок (перчатки у лба). chin=true: обычная стойка - перчатки у подбородка,
+  // левая (передняя) чуть дальше вперёд. wl/wr - вес на каждую руку (бьющую руку не трогаем).
+  guardIK(w, chin = false, wl = 1, wr = 1) {
     this.model.updateMatrixWorld(true);
     const H = this.headBone.getWorldPosition(V());
     const f = V(Math.sin(this.yaw), 0, Math.cos(this.yaw)), l = V(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
     for (const [k, sgn] of [['L', 1], ['R', -1]]) {
+      const ww = w * (k === 'L' ? wl : wr); if (ww < .01) continue;
       const A = this.arms[k];
       const S = A.up.getWorldPosition(V()), Ew = A.fore.getWorldPosition(V()), Hw = A.hand.getWorldPosition(V());
       const a = S.distanceTo(Ew), b = Ew.distanceTo(Hw);
-      const T = H.clone().addScaledVector(f, .16).addScaledVector(l, sgn * .085).addScaledVector(UP, -.1);
-      const pole = V().addScaledVector(UP, -1).addScaledVector(f, .35).addScaledVector(l, sgn * .45);
+      const T = chin
+        ? H.clone().addScaledVector(f, k === 'L' ? .27 : .17).addScaledVector(l, sgn * (k === 'L' ? .07 : .11)).addScaledVector(UP, k === 'L' ? -.13 : -.17)
+        : H.clone().addScaledVector(f, .16).addScaledVector(l, sgn * .085).addScaledVector(UP, -.1);
+      const pole = chin
+        ? V().addScaledVector(UP, -1).addScaledVector(f, .15).addScaledVector(l, sgn * .6)
+        : V().addScaledVector(UP, -1).addScaledVector(f, .35).addScaledVector(l, sgn * .45);
       const E = V(), Tc = V(); ik(S, T, a, b, pole, E, Tc);
       const q0u = A.up.quaternion.clone(), q0f = A.fore.quaternion.clone(), q0h = A.hand.quaternion.clone();
       aimBone(A.up, A.fore, E);
       aimBone(A.fore, A.hand, Tc);
-      if (A.tip) aimBone(A.hand, A.tip, A.hand.getWorldPosition(V()).addScaledVector(UP, 1).addScaledVector(f, .25));
-      A.up.quaternion.copy(q0u.slerp(A.up.quaternion, w));
-      A.fore.quaternion.copy(q0f.slerp(A.fore.quaternion, w));
-      A.hand.quaternion.copy(q0h.slerp(A.hand.quaternion, w));
+      if (A.tip) aimBone(A.hand, A.tip, A.hand.getWorldPosition(V()).addScaledVector(UP, chin ? .8 : 1).addScaledVector(f, chin ? .6 : .25));
+      A.up.quaternion.copy(q0u.slerp(A.up.quaternion, ww));
+      A.fore.quaternion.copy(q0f.slerp(A.fore.quaternion, ww));
+      A.hand.quaternion.copy(q0h.slerp(A.hand.quaternion, ww));
       A.up.updateMatrixWorld(true);
     }
   }
@@ -923,7 +943,12 @@ class Fighter {
       if (sp < .3) name = 'idle';
       else if (Math.abs(lv.z) >= Math.abs(lv.x)) name = lv.z > 0 ? 'stepF' : 'stepB';
       else name = lv.x > 0 ? 'stepL' : 'stepR';
-      key = 'l' + name; ts = name === 'idle' ? 1 : clamp(sp / 1.1, .7, 1.3);
+      // шаг клипа подгоняем под скорость бойца (скорость хода клипа ARDY записана в meta при сборке) - иначе ноги скользят
+      const cm = this.meta.clips[name] || {}, cs = cm.speed || 1.1;
+      // клип шага ARDY идёт под своим углом (stepL, например, влево-назад): доворачиваем модель так, чтобы
+      // направление хода клипа совпало с реальным движением - иначе опорная нога едет вбок
+      this.locoYaw = name !== 'idle' && cm.vz !== undefined ? { d: Math.atan2(lv.x, lv.z) - Math.atan2(cm.vx, cm.vz), w: clamp(sp / .6, 0, 1) } : null;
+      key = 'l' + name; ts = name === 'idle' ? 1 : clamp(sp / cs, .5, 2);
       if (this.cur && this.animKey === key) this.cur.timeScale = ts;
     }
     if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade, off); }
@@ -941,6 +966,22 @@ class Fighter {
     this.mixer.update(0);
     // процедурный блок: плавный вход/выход, обе перчатки ко лбу
     this.blockA = (this.blockA || 0) + ((s === 'block' ? 1 : 0) - (this.blockA || 0)) * (1 - Math.exp(-dt * 22));
+    // стойка «перчатки у подбородка» поверх клипов ARDY: в клипах руки то над головой, то с заломанной
+    // кистью. Бьющая рука свободна, в нокдауне/подъёме/победе IK выключен.
+    if (this.meta && this.meta.source === 'ARDY' && this.arms) {
+      const free = ['down', 'ko', 'getup', 'win'].includes(s);
+      const k = 1 - Math.exp(-dt * 16);
+      const wl = free || (s === 'punch' && P.hand === 'L') ? 0 : 1, wr = free || (s === 'punch' && P.hand === 'R') ? 0 : 1;
+      this.chinL = (this.chinL || 0) + (wl - (this.chinL || 0)) * (s === 'punch' && P.hand === 'L' ? 1 : k);
+      this.chinR = (this.chinR || 0) + (wr - (this.chinR || 0)) * (s === 'punch' && P.hand === 'R' ? 1 : k);
+      // разворот: в стойке грудь почти на соперника, в ударе - кулак в соперника
+      let want = s === 'punch' ? this.yawPunch : this.yawIdle;
+      const L = this.locoYaw;
+      if (L && ['idle', 'block'].includes(s)) { let d = L.d - want; d = Math.atan2(Math.sin(d), Math.cos(d)); want += clamp(d, -.8, .8) * L.w; }
+      if (want !== undefined && !free) this.model.rotation.y += (want - this.model.rotation.y) * (1 - Math.exp(-dt * 10));
+      const w = s === 'stun' ? .6 : 1;
+      if (this.chinL > .01 || this.chinR > .01) this.guardIK(w * (1 - (this.blockA || 0)), true, this.chinL, this.chinR);
+    }
     if (this.blockA > .01 && this.arms) this.guardIK(this.blockA);
     // процедурный уклон: наклон позвоночника вбок + сдвиг таза, стойка не меняется
     const t = this.t, env = t < .3 ? smooth(t / .09) : 1 - smooth((t - .3) / .2);
