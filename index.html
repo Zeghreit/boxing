@@ -369,6 +369,15 @@ function limb(m, a, b, r) {
   m.quaternion.setFromUnitVectors(UP, v.divideScalar(L));
   m.scale.set(r, L, r);
 }
+// поворот кости вокруг мировой оси (родитель повёрнут): q = P^-1 * R * P * q
+const _tq1 = new THREE.Quaternion(), _tq2 = new THREE.Quaternion();
+function tiltBone(bone, axisW, ang) {
+  bone.parent.getWorldQuaternion(_tq1);
+  _tq2.setFromAxisAngle(axisW, ang);
+  const P = _tq1.clone(), Pi = _tq1.clone().invert();
+  bone.quaternion.premultiply(Pi.multiply(_tq2).multiply(P));
+  bone.updateMatrixWorld(true);
+}
 const bez = (a, b, c, t) => V().copy(a).multiplyScalar((1 - t) * (1 - t)).addScaledVector(b, 2 * t * (1 - t)).addScaledVector(c, t * t);
 
 /* ---------- боец ---------- */
@@ -477,6 +486,8 @@ class Fighter {
       if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; }
       if (o.isBone && /Head$/.test(o.name)) this.headBone = o;
     });
+    this.spine = [];
+    this.model.traverse(o => { if (o.isBone && /Spine[12]?$/.test(o.name)) this.spine.push(o); });
     this.body.visible = false; this.root.add(this.model);
     this.mixer = new THREE.AnimationMixer(this.model);
     this.acts = {};
@@ -500,9 +511,12 @@ class Fighter {
       const imp = (this.meta.clips[name] || {}).impact || .3;
       ts = clamp(imp / (P.startup * this.spd), .7, 2.6);
     } else if (s === 'block') { key = 'b' + this.seq; name = 'block'; ts = 1.8; fade = .07; }
-    else if (s === 'dodge') {
-      key = 'd' + this.seq; name = this.dd === 'D' ? 'duck' : this.dd === 'L' ? 'slipL' : 'slipR';
-      ts = this.dur(name) / .6; fade = .05;
+    else if (s === 'dodge' && this.dd === 'D') {
+      key = 'd' + this.seq; name = 'duck'; ts = this.dur('duck') / .6; fade = .05;
+    } else if (s === 'dodge') {
+      // уклоны L/R: клипы Mixamo в зеркальной стойке (руки менялись местами) -
+      // остаёмся в idle, наклон корпуса накладывается процедурно ниже
+      key = 'lidle'; name = 'idle'; once = false; fade = .15;
     } else if (s === 'stun') {
       key = 's' + this.seq; name = this.stunT > .38 ? 'hitBig' : 'hit';
       ts = clamp(this.dur(name) / (this.stunT + .35), .8, 3); fade = .05;
@@ -521,6 +535,17 @@ class Fighter {
     if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
     if (s === 'block' && this.cur && this.cur.time > this.dur('block') * .38) this.cur.paused = true;
     this.mixer.update(dt);
+    // процедурный уклон: наклон позвоночника вбок + сдвиг таза, стойка не меняется
+    const t = this.t, env = t < .3 ? smooth(t / .09) : 1 - smooth((t - .3) / .2);
+    const want = s === 'dodge' && this.dd !== 'D' ? (this.dd === 'L' ? 1 : -1) * env : 0;
+    this.slipA = (this.slipA || 0) + (want - (this.slipA || 0)) * (1 - Math.exp(-dt * 30));
+    this.model.position.x = this.slipA * .14;
+    this.model.position.y = -Math.abs(this.slipA) * .05;
+    if (Math.abs(this.slipA) > .002 && this.spine.length) {
+      this.model.updateMatrixWorld(true);
+      const fwd = V(Math.sin(this.yaw), 0, Math.cos(this.yaw));
+      for (const b of this.spine) tiltBone(b, fwd, -this.slipA * .5 / this.spine.length);
+    }
   }
   pose(dt, opp, time) {
     const s = this.state, t = this.t, P = this.pn ? PUNCH[this.pn] : null, m = this.m;
