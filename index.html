@@ -75,6 +75,9 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
 .help{font-size:12px;opacity:.78;max-width:600px;line-height:1.55}
 .help b{color:#fbbf24}
 .hint{display:none;color:#fbbf24;font-size:13px}
+.brand{font-size:12px;opacity:.55;letter-spacing:.08em;margin-top:-6px}
+.brand span{font-family:ui-monospace,Menlo,monospace}
+#updateBanner{position:fixed;left:0;right:0;top:0;z-index:9999;background:#f59e0b;color:#111;font:700 14px -apple-system,system-ui,sans-serif;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));text-align:center;cursor:pointer}
 @media (orientation:portrait){.hint{display:block}}
 </style>
 </head>
@@ -102,6 +105,9 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
 
 <div class="screen on" id="menu">
   <h1>БОКС</h1>
+  <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
+       Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
+  <div class="brand">Бокс <span>0.2d</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -134,6 +140,30 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const loader = new GLTFLoader();
+const VER = (document.querySelector('.brand span') || {}).textContent || '0';
+
+/* ---------- обновление как в Kubik ----------
+   При запуске и при каждом возвращении в приложение тихо читаем index.html с сервера
+   мимо кэша и сравниваем версию в .brand span. Новая -> плашка сверху, тап = перезагрузка
+   с ?v=..., чтобы iOS (и ярлык «на экран Домой») точно взял свежий файл.
+   Формат версии здесь не разбираем - сравниваем текст целиком. */
+async function checkForUpdate() {
+  try {
+    const html = await (await fetch(location.pathname, { cache: 'no-store' })).text();
+    const m = html.match(/class="brand"[^>]*>[^<]*<span[^>]*>([^<]+)<\/span>/);
+    if (m && m[1].trim() !== VER.trim()) showUpdateBanner(m[1].trim());
+  } catch (e) { /* офлайн - молчим */ }
+}
+function showUpdateBanner(v) {
+  if (document.getElementById('updateBanner')) return;
+  const bar = document.createElement('div');
+  bar.id = 'updateBanner';
+  bar.textContent = `Доступна версия ${v} — нажми, чтобы обновить`;
+  bar.addEventListener('click', () => { location.href = location.pathname + '?v=' + Date.now() + (location.search.includes('mute') ? '&mute' : ''); });
+  document.body.appendChild(bar);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+checkForUpdate();
 
 const $ = id => document.getElementById(id);
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -253,7 +283,7 @@ function prepModel(root) {
   return root;
 }
 async function loadProps() {
-  const [post, stool, bucket] = await Promise.all(['corner_post', 'stool', 'bucket'].map(n => loader.loadAsync(`models/${n}.glb`)));
+  const [post, stool, bucket] = await Promise.all(['corner_post', 'stool', 'bucket'].map(n => loader.loadAsync(`models/${n}.glb?v=${VER}`)));
   // где стойка и куда смотрят крюки: среднее вершин ≈ стойка, центр bbox смещён в сторону крюков
   const mesh = post.scene.getObjectByProperty('isMesh', true);
   const pos = mesh.geometry.attributes.position, mean = V();
@@ -681,7 +711,7 @@ const enemy = new Fighter({ isPlayer: false, skin: 0x9a6a48, glove: 0xdc2626, tr
 
 /* ---------- бойцы AssetForge (если не загрузились - остаются болванки) ---------- */
 async function loadFighters() {
-  const get = n => Promise.all([loader.loadAsync(`models/${n}.glb`), fetch(`models/${n}.json`).then(r => r.json())]);
+  const get = n => Promise.all([loader.loadAsync(`models/${n}.glb?v=${VER}`), fetch(`models/${n}.json?v=${VER}`).then(r => r.json())]);
   const [[pg, pm], [eg, em]] = await Promise.all([get('boxer_player'), get('boxer_enemy')]);
   player.attach(pg, pm, 1); enemy.attach(eg, em, 1.03);
   GETUP_T = 3.0;
