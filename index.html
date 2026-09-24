@@ -107,7 +107,7 @@ h2{margin:0;font-size:clamp(36px,11vmin,80px);font-weight:900;letter-spacing:.04
   <h1>БОКС</h1>
   <!-- Версию ЧИТАЕТ checkForUpdate: сравнивает текст этого span с тем, что лежит на сервере.
        Формат не важен (0.2d, 0.3, ...), важно менять его при каждом пуше. -->
-  <div class="brand">Бокс <span>0.2g</span></div>
+  <div class="brand">Бокс <span>0.2h</span></div>
   <div class="sub">3 раунда по 60 секунд. Нокаут, 3 нокдауна или по очкам.</div>
   <div class="row">
     <button class="mbtn easy" data-diff="easy">Новичок</button>
@@ -173,7 +173,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
 const UP = V(0, 1, 0), ZF = V(0, 0, 1);
 const ROUND_T = 60, ROUNDS = 3, RING = 2.85;
-let GETUP_T = 1.1;
+let GETUP_T = 1.1; const ANIM_MAX = 1.4;   // max clip playback speed
 
 /* ---------- удары ---------- */
 const PUNCH = {
@@ -641,11 +641,11 @@ class Fighter {
     }
   }
   dur(name) { const a = this.acts[name]; return a ? a.getClip().duration : 1; }
-  play(name, once, ts, fade) {
+  play(name, once, ts, fade, off = 0) {
     const a = this.acts[name] || this.acts.idle; if (!a) return;
     a.reset(); a.enabled = true; a.setEffectiveWeight(1);
     a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
-    a.clampWhenFinished = once; a.timeScale = ts; a.paused = false; a.play();
+    a.clampWhenFinished = once; a.timeScale = ts; a.paused = false; a.play(); a.time = off;
     if (this.cur && this.cur !== a) {
       if (fade > 0) a.crossFadeFrom(this.cur, fade, false);
       else this.cur.stop();   // жёсткий стык (подъём после нокаута: позы уже совмещены переносом корня)
@@ -654,26 +654,26 @@ class Fighter {
   }
   animate(dt) {
     const s = this.state, P = this.pn ? PUNCH[this.pn] : null;
-    let key, name, once = true, ts = 1, fade = .1;
+    let key, name, once = true, ts = 1, fade = .1, off = 0; const imp = n => (this.meta.clips[n] || {}).impact || .3;
     if (s === 'punch') {
       key = 'p' + this.pid; name = this.pn; fade = .05;
-      const imp = (this.meta.clips[name] || {}).impact || .3;
-      ts = clamp(imp / (P.startup * this.spd), .7, 2.6);
+      const want = P.startup * this.spd, i = imp(name);
+      ts = Math.max(.7, i / want); if (ts > ANIM_MAX) { off = i - ANIM_MAX * want; ts = ANIM_MAX; }   // skip the wind-up instead of speeding up
     } else if (s === 'block') {
       // клип «High Left Block» однобокий, с наклоном, руки перекрещивались - стоим в idle,
       // обе перчатки ко лбу ставит IK ниже (guardIK)
       key = 'lidle'; name = 'idle'; once = false; fade = .15;
     }
     else if (s === 'dodge' && this.dd === 'D') {
-      key = 'd' + this.seq; name = 'duck'; ts = this.dur('duck') / .6; fade = .05;
+      key = 'd' + this.seq; name = 'duck'; ts = ANIM_MAX; off = Math.max(0, imp('duck') - .3 * ts); fade = .05;
     } else if (s === 'dodge') {
       // уклоны L/R: клипы Mixamo в зеркальной стойке (руки менялись местами) -
       // остаёмся в idle, наклон корпуса накладывается процедурно ниже
       key = 'lidle'; name = 'idle'; once = false; fade = .15;
     } else if (s === 'stun') {
       key = 's' + this.seq; name = this.stunT > .38 ? 'hitBig' : 'hit';
-      ts = clamp(this.dur(name) / (this.stunT + .35), .8, 3); fade = .05;
-    } else if (s === 'down' || s === 'ko') { key = 'ko'; name = 'ko'; ts = this.dur('ko') / 2.4; }   // лечь до самого раннего подъёма
+      ts = clamp(this.dur(name) / (this.stunT + .35), .8, ANIM_MAX); off = Math.max(0, imp(name) - .18 * ts); fade = .05;
+    } else if (s === 'down' || s === 'ko') { key = 'ko'; name = 'ko'; ts = this.dur('ko') / 3.2; }   // лечь до самого раннего подъёма
     else if (s === 'getup') { key = 'g'; name = 'getup'; ts = this.dur('getup') / GETUP_T; fade = 0; }
     else if (s === 'win') { key = 'w'; name = 'win'; once = false; }
     else {
@@ -682,10 +682,10 @@ class Fighter {
       if (sp < .3) name = 'idle';
       else if (Math.abs(lv.z) >= Math.abs(lv.x)) name = lv.z > 0 ? 'stepF' : 'stepB';
       else name = lv.x > 0 ? 'stepL' : 'stepR';
-      key = 'l' + name; ts = name === 'idle' ? 1 : clamp(sp / 1.1, .7, 1.6);
+      key = 'l' + name; ts = name === 'idle' ? 1 : clamp(sp / 1.1, .7, 1.3);
       if (this.cur && this.animKey === key) this.cur.timeScale = ts;
     }
-    if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade); }
+    if (key !== this.animKey) { this.animKey = key; this.play(name, once, ts, fade, off); }
     this.mixer.update(dt);
     // Слой стойки по группам: 1 - сумма весов клипов, которые ведут эту группу
     // (иначе на переходах кости проваливаются в позу рига). Считаем ПОСЛЕ шага микшера:
@@ -829,11 +829,11 @@ async function loadFighters() {
   const get = n => Promise.all([loader.loadAsync(`models/${n}.glb?v=${VER}`), fetch(`models/${n}.json?v=${VER}`).then(r => r.json())]);
   const [[pg, pm], [eg, em]] = await Promise.all([get('boxer_player'), get('boxer_enemy')]);
   player.attach(pg, pm, 1); enemy.attach(eg, em, 1.03);
-  GETUP_T = 3.0;
+  GETUP_T = 4.4;
   // окно удара подстраивается под кадр попадания в клипе (замах читается, но не тянется)
   for (const [k, P] of Object.entries(PUNCH)) {
     const imp = (pm.clips[k] || {}).impact;
-    if (imp) P.startup = clamp(imp / 1.7, P.startup, P.startup * 1.8);
+    if (imp) P.startup = clamp(imp / ANIM_MAX, P.startup, P.startup * 1.8);
   }
   window.__game.models = true;
 }
@@ -967,7 +967,7 @@ function knockdown(f) {
     const koChance = [0, .12, .35][f.knock - 1] + (game.diff === 'easy' ? .15 : game.diff === 'hard' ? -.08 : 0);
     upAt = Math.random() < koChance ? 99 : Math.floor(rand(3, 8));
   }
-  game.count = { f, n: 0, t: -1.2, up: 0, upAt };
+  game.count = { f, n: 0, t: -1.4, up: 0, upAt };
   if (f.isPlayer) { $('getup').classList.add('on'); $('gBar').style.width = '0'; }
 }
 function getUp(f) {
@@ -986,7 +986,7 @@ function ko(f) {
   $('getup').classList.remove('on');
   game.state = 'over'; f.state = 'ko'; o.state = 'win';
   msg('НОКАУТ!', 2.6, o === player ? 'gold' : 'red'); sfx.bell();
-  after(2.8, () => finish(o === player, `нокаутом в ${game.round}-м раунде`));
+  after(3.4, () => finish(o === player, `нокаутом в ${game.round}-м раунде`));
 }
 function updateCount(dt) {
   const c = game.count;
